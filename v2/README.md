@@ -40,6 +40,30 @@ The core data contracts live in `models.py`:
 - `TradeOrder` — a single trade instruction
 - `ExecutionResult` — batch of trades with estimated costs
 
+## Data Provider Contract
+
+The v2 data layer exposes a provider-facing contract in [v2/data/protocol.py](v2/data/protocol.py) and the runtime adapter implementation in [v2/data/client.py](v2/data/client.py). The backtesting runtime can consume any object that satisfies the provider interface through the adapter layer in [src/backtesting/data_provider.py](src/backtesting/data_provider.py). The design assumption is that market quote, fundamentals, news, insider-trade, and company-facts access should stay behind an abstraction so a test stub, yfinance adapter, or financial-datasets client can be plugged in without changing the front-end analytics pipeline.
+
+## Run Commands
+
+Install dependencies:
+
+```bash
+poetry install
+```
+
+Run the backtest CLI:
+
+```bash
+poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA
+```
+
+Run a portfolio/valuation smoke test:
+
+```bash
+poetry run pytest tests/backtesting/test_portfolio.py tests/backtesting/test_valuation.py tests/backtesting/test_metrics.py
+```
+
 ## Contributing
 
 v2 is in early development. If you'd like to contribute, start by reading `signals/base.py` to understand the signal interface, then check open issues tagged `v2`.

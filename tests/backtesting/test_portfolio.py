@@ -140,3 +140,13 @@ def test_zero_or_negative_quantity_is_noop(portfolio: Portfolio, action: str) ->
     assert after == before
 
 
+def test_portfolio_analytics_surface_is_collision_free() -> None:
+    p = Portfolio(tickers=["AAPL"], initial_cash=1_000.0, margin_requirement=0.5)
+    p.apply_long_buy("AAPL", 5, 20.0)
+
+    snapshot = p.get_snapshot()
+    assert snapshot["positions"]["AAPL"]["long"] == 5
+    assert snapshot["positions"]["AAPL"]["long_cost_basis"] == pytest.approx(20.0)
+    assert snapshot["cash"] == pytest.approx(900.0)
+
+

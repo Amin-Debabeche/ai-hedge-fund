@@ -50,3 +50,14 @@ def test_metrics_zero_volatility_sharpe_zero():
     calc.update_metrics(metrics, vals)
     assert metrics["sharpe_ratio"] == 0.0
 
+
+def test_compute_metrics_returns_consistent_analytics_fields():
+    calc = PerformanceMetricsCalculator(annual_trading_days=252, annual_rf_rate=0.0)
+    values = _build_values([100.0, 105.0, 102.0, 112.0])
+    metrics = calc.compute_metrics(values)
+
+    assert {"sharpe_ratio", "sortino_ratio", "max_drawdown"}.issubset(metrics.keys())
+    assert metrics["max_drawdown"] <= 0.0
+    assert metrics["sharpe_ratio"] is not None
+    assert metrics["sortino_ratio"] is not None
+

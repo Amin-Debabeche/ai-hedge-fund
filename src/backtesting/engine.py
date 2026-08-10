@@ -14,6 +14,7 @@ from .types import PerformanceMetrics, PortfolioValuePoint
 from .valuation import calculate_portfolio_value, compute_exposures
 from .output import OutputBuilder
 from .benchmarks import BenchmarkCalculator
+from .data_provider import APIMarketDataProvider, MarketDataProvider
 
 from src.tools.api import (
     get_company_news,
@@ -63,6 +64,7 @@ class BacktestEngine:
         self._agent_controller = AgentController()
         self._perf = PerformanceMetricsCalculator()
         self._results = OutputBuilder(initial_capital=self._initial_capital)
+        self._data_provider: MarketDataProvider = APIMarketDataProvider()
 
         # Benchmark calculator
         self._benchmark = BenchmarkCalculator()
@@ -84,13 +86,13 @@ class BacktestEngine:
         start_date_str = start_date_dt.strftime("%Y-%m-%d")
 
         for ticker in self._tickers:
-            get_prices(ticker, start_date_str, self._end_date)
-            get_financial_metrics(ticker, self._end_date, limit=10)
-            get_insider_trades(ticker, self._end_date, start_date=self._start_date, limit=1000)
-            get_company_news(ticker, self._end_date, start_date=self._start_date, limit=1000)
-        
+            self._data_provider.get_prices(ticker, start_date_str, self._end_date)
+            self._data_provider.get_financial_metrics(ticker, self._end_date, limit=10)
+            self._data_provider.get_insider_trades(ticker, self._end_date, start_date=self._start_date, limit=1000)
+            self._data_provider.get_company_news(ticker, self._end_date, start_date=self._start_date, limit=1000)
+
         # Preload data for SPY for benchmark comparison
-        get_prices("SPY", self._start_date, self._end_date)
+        self._data_provider.get_prices("SPY", self._start_date, self._end_date)
 
 
     def run_backtest(self) -> PerformanceMetrics:
@@ -116,7 +118,7 @@ class BacktestEngine:
                 missing_data = False
                 for ticker in self._tickers:
                     try:
-                        price_data = get_price_data(ticker, previous_date_str, current_date_str)
+                        price_data = self._data_provider.get_price_data(ticker, previous_date_str, current_date_str)
                         if price_data.empty:
                             missing_data = True
                             break
