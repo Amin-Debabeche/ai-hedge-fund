@@ -2,6 +2,29 @@
 
 This is a proof of concept for an AI-powered hedge fund.  The goal of this project is to explore the use of AI to make trading decisions.  This project is for **educational** purposes only and is not intended for real trading or investment.
 
+This repository carries a local app surface for running against Ollama/locally hosted LLMs.
+
+Assumptions:
+- The runtime expects a locally available Ollama server unless a cloud provider is chosen in the model selection flow.
+- The CLI and API depend on a valid environment (`.env` or API keys) for provider-specific LLM/auth flows.
+- Market data is fetched through yfinance/Financial Datasets adapters and cached inside the existing data layer.
+- The backtesting code emits daily portfolio metrics for a strategy curve and can be consumed by frontend or API callers.
+
+Local run commands:
+
+```bash
+poetry install
+poetry run python src/main.py --ticker AAPL,MSFT,NVDA --ollama
+poetry run python src/backtester.py --ticker AAPL,MSFT,NVDA
+```
+
+The backend app can also be run locally:
+
+```bash
+cd app
+poetry run uvicorn app.backend.main:app --reload
+```
+
 This system employs several agents working together:
 
 1. Aswath Damodaran Agent - The Dean of Valuation, focuses on story, numbers, and disciplined valuation
