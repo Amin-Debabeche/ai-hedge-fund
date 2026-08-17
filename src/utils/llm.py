@@ -2,6 +2,7 @@
 
 import json
 from pydantic import BaseModel
+from src.data.llm_cache import get_llm_cache
 from src.llm.models import get_model, get_model_info
 from src.utils.progress import progress
 from src.graph.state import AgentState
@@ -38,6 +39,23 @@ def call_llm(
         model_name = "gpt-4.1"
         model_provider = "OPENAI"
 
+    # Check the cache before hitting the LLM - avoids re-computing the same analysis
+    # (e.g. re-running a backtest) for a prompt/model/schema combination seen before.
+    llm_cache = get_llm_cache()
+    cache_key = llm_cache.make_key(
+        agent_name=agent_name,
+        model_name=model_name,
+        model_provider=model_provider,
+        pydantic_model_name=pydantic_model.__name__,
+        prompt=prompt,
+    )
+    cached_response = llm_cache.get(cache_key)
+    if cached_response is not None:
+        try:
+            return pydantic_model.model_validate(cached_response)
+        except Exception:
+            pass  # stale/incompatible cache entry - fall through and re-fetch
+
     # Extract API keys from state if available
     api_keys = None
     if state:
@@ -55,6 +73,17 @@ def call_llm(
             method="json_mode",
         )
 
+    def _store_in_cache(response: BaseModel) -> BaseModel:
+        llm_cache.set(
+            cache_key,
+            response.model_dump(mode="json"),
+            agent_name=agent_name,
+            model_name=model_name,
+            model_provider=model_provider,
+            pydantic_model_name=pydantic_model.__name__,
+        )
+        return response
+
     # Call the LLM with retries
     for attempt in range(max_retries):
         try:
@@ -65,9 +94,9 @@ def call_llm(
             if model_info and not model_info.has_json_mode():
                 parsed_result = extract_json_from_response(result.content)
                 if parsed_result:
-                    return pydantic_model(**parsed_result)
+                    return _store_in_cache(pydantic_model(**parsed_result))
             else:
-                return result
+                return _store_in_cache(result)
 
         except Exception as e:
             if agent_name:

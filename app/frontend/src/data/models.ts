@@ -3,8 +3,17 @@ import { api } from '@/services/api';
 export interface LanguageModel {
   display_name: string;
   model_name: string;
-  provider: "Anthropic" | "DeepSeek" | "Google" | "Groq" | "OpenAI";
+  provider: "Anthropic" | "DeepSeek" | "Google" | "Groq" | "OpenAI" | "Ollama";
 }
+
+// Always-available local model option: lets a user pick "run this agent
+// locally with Ollama" even before the model has been downloaded. The
+// pre-run readiness check (use-ollama-preflight) prompts to download it.
+export const OLLAMA_LOCAL_MODEL: LanguageModel = {
+  display_name: 'Qwen3 (4B) - Local (Ollama)',
+  model_name: 'qwen3:4b',
+  provider: 'Ollama',
+};
 
 // Cache for models to avoid repeated API calls
 let languageModels: LanguageModel[] | null = null;
@@ -17,9 +26,11 @@ export const getModels = async (): Promise<LanguageModel[]> => {
   if (languageModels) {
     return languageModels;
   }
-  
+
   try {
-    languageModels = await api.getLanguageModels();
+    const models = await api.getLanguageModels();
+    const hasLocalOllamaModel = models.some(m => m.model_name === OLLAMA_LOCAL_MODEL.model_name);
+    languageModels = hasLocalOllamaModel ? models : [...models, OLLAMA_LOCAL_MODEL];
     return languageModels;
   } catch (error) {
     console.error('Failed to fetch models:', error);

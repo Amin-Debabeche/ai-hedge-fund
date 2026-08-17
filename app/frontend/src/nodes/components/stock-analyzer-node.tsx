@@ -25,6 +25,7 @@ import { useNodeContext } from '@/contexts/node-context';
 import { useFlowConnection } from '@/hooks/use-flow-connection';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useNodeState } from '@/hooks/use-node-state';
+import { useOllamaPreflight } from '@/hooks/use-ollama-preflight';
 import { cn, formatKeyboardShortcut } from '@/lib/utils';
 import { type StockAnalyzerNode } from '../types';
 import { NodeShell } from './node-shell';
@@ -71,7 +72,8 @@ export function StockAnalyzerNode({
     stopFlow,
     recoverFlowState
   } = useFlowConnection(flowId);
-  
+  const { ensureReady: ensureOllamaReady, dialog: ollamaSetupDialog } = useOllamaPreflight();
+
   // Check if the hedge fund can be run
   const canRunHedgeFund = canRun && tickers.trim() !== '';
   
@@ -129,13 +131,13 @@ export function StockAnalyzerNode({
     stopFlow();
   };
 
-  const handlePlay = () => {
+  const handlePlay = async () => {
     // Expand bottom panel and set to output tab if backtest
     if (runMode === 'backtest') {
       expandBottomPanel();
       setBottomPanelTab('output');
     }
-    
+
     // Get the current flow's nodes and edges
     const allNodes = getNodes();
     const allEdges = getEdges();
@@ -187,9 +189,14 @@ export function StockAnalyzerNode({
       }
     }
     
-    // Convert tickers to array    
+    // Convert tickers to array
     const tickerList = tickers.split(',').map(t => t.trim());
-    
+
+    // If any agent needs a local Ollama model that isn't downloaded/running yet,
+    // prompt to set it up before starting the run instead of failing mid-run.
+    const ollamaReady = await ensureOllamaReady(agentModels);
+    if (!ollamaReady) return;
+
     // Check if we're in backtest mode
     if (runMode === 'backtest') {
       // Use the flow connection hook to run the backtest with selected dates
@@ -415,6 +422,7 @@ export function StockAnalyzerNode({
           </div>
         </CardContent>
       </NodeShell>
+      {ollamaSetupDialog}
     </TooltipProvider>
   );
 }

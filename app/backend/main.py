@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import logging
+import os
 import asyncio
 
 from app.backend.routes import api_router
@@ -17,10 +18,15 @@ app = FastAPI(title="AI Hedge Fund API", description="Backend API for AI Hedge F
 # Initialize database tables (this is safe to run multiple times)
 Base.metadata.create_all(bind=engine)
 
-# Configure CORS
+# Configure CORS. Defaults cover the local Vite dev server; add any other
+# origins the frontend is served from (e.g. a Vercel deployment - the browser
+# still calls this local backend directly, so its origin just needs to be
+# allowed here) via a comma-separated CORS_ORIGINS env var.
+default_origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
+extra_origins = [origin.strip() for origin in os.getenv("CORS_ORIGINS", "").split(",") if origin.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],  # Frontend URLs
+    allow_origins=default_origins + extra_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
