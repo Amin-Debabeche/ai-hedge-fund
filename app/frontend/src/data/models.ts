@@ -3,7 +3,7 @@ import { api } from '@/services/api';
 export interface LanguageModel {
   display_name: string;
   model_name: string;
-  provider: "Anthropic" | "DeepSeek" | "Google" | "Groq" | "OpenAI" | "Ollama";
+  provider: "Anthropic" | "DeepSeek" | "Google" | "Groq" | "OpenAI" | "Ollama" | "Vercel";
 }
 
 // Always-available local model option: lets a user pick "run this agent

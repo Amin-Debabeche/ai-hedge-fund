@@ -74,6 +74,13 @@ const LLM_API_KEYS: ApiKey[] = [
     placeholder: 'your-openrouter-api-key'
   },
   {
+    key: 'AI_GATEWAY_API_KEY',
+    label: 'Vercel AI Gateway',
+    description: 'For the free-tier models (Laguna S 2.1, GLM-4.6V Flash)',
+    url: 'https://vercel.com/docs/ai-gateway',
+    placeholder: 'your-vercel-ai-gateway-api-key'
+  },
+  {
     key: 'GIGACHAT_API_KEY',
     label: 'GigaChat API',
     description: 'For GigaChat models (GigaChat-2-Max, etc.)',

@@ -83,5 +83,15 @@
     "display_name": "Azure Open AI Deployment",
     "model_name": "",
     "provider": "Azure OpenAI"
+  },
+  {
+    "display_name": "Laguna S 2.1 (Free)",
+    "model_name": "poolside/laguna-s-2.1-free",
+    "provider": "Vercel"
+  },
+  {
+    "display_name": "GLM-4.6V Flash (Free)",
+    "model_name": "zai/glm-4.6v-flash",
+    "provider": "Vercel"
   }
 ]

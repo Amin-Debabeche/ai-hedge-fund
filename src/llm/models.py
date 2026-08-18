@@ -31,6 +31,7 @@ class ModelProvider(str, Enum):
     GIGACHAT = "GigaChat"
     AZURE_OPENAI = "Azure OpenAI"
     XAI = "xAI"
+    VERCEL = "Vercel"
 
 
 class LLMModel(BaseModel):
@@ -58,6 +59,10 @@ class LLMModel(BaseModel):
         # OpenRouter models generally support JSON mode
         if self.provider == ModelProvider.OPENROUTER:
             return True
+        # Free-tier Vercel AI Gateway models don't reliably support the
+        # OpenAI-style JSON mode parameter - fall back to manual extraction.
+        if self.provider == ModelProvider.VERCEL:
+            return False
         return True
 
     def is_deepseek(self) -> bool:
@@ -203,6 +208,16 @@ def get_model(model_name: str, model_provider: ModelProvider, api_keys: dict = N
                     "X-Title": site_name,
                 }
             }
+        )
+    elif model_provider == ModelProvider.VERCEL:
+        api_key = (api_keys or {}).get("AI_GATEWAY_API_KEY") or os.getenv("AI_GATEWAY_API_KEY")
+        if not api_key:
+            print(f"API Key Error: Please make sure AI_GATEWAY_API_KEY is set in your .env file or provided via API keys.")
+            raise ValueError("Vercel AI Gateway API key not found. Please make sure AI_GATEWAY_API_KEY is set in your .env file or provided via API keys.")
+        return ChatOpenAI(
+            model=model_name,
+            openai_api_key=api_key,
+            openai_api_base="https://ai-gateway.vercel.sh/v1",
         )
     elif model_provider == ModelProvider.KIMI:
         api_key = (api_keys or {}).get("MOONSHOT_API_KEY") or os.getenv("MOONSHOT_API_KEY") \
