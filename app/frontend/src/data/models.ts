@@ -8,7 +8,7 @@ export interface LanguageModel {
 
 // Always-available local model option: lets a user pick "run this agent
 // locally with Ollama" even before the model has been downloaded. The
-// pre-run readiness check (use-ollama-preflight) prompts to download it.
+// pre-run readiness check (use-run-preflight) prompts to download it.
 export const OLLAMA_LOCAL_MODEL: LanguageModel = {
   display_name: 'Qwen3 (4B) - Local (Ollama)',
   model_name: 'qwen3:4b',

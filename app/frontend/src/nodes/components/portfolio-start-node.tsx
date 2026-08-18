@@ -24,7 +24,7 @@ import { useNodeContext } from '@/contexts/node-context';
 import { useFlowConnection } from '@/hooks/use-flow-connection';
 import { useKeyboardShortcuts } from '@/hooks/use-keyboard-shortcuts';
 import { useNodeState } from '@/hooks/use-node-state';
-import { useOllamaPreflight } from '@/hooks/use-ollama-preflight';
+import { useRunPreflight } from '@/hooks/use-run-preflight';
 import { cn, formatKeyboardShortcut } from '@/lib/utils';
 import { type PortfolioStartNode } from '../types';
 import { NodeShell } from './node-shell';
@@ -79,7 +79,7 @@ export function PortfolioStartNode({
     stopFlow,
     recoverFlowState
   } = useFlowConnection(flowId);
-  const { ensureReady: ensureOllamaReady, dialog: ollamaSetupDialog } = useOllamaPreflight();
+  const { ensureReady: ensureRunReady, dialog: runPreflightDialog } = useRunPreflight();
 
   // Check if the portfolio analyzer can be run
   const canRunPortfolioAnalyzer = canRun && positions.length > 0 && positions.every(pos => pos.ticker.trim() !== '');
@@ -209,10 +209,10 @@ export function PortfolioStartNode({
     // For now, extract tickers for current API compatibility
     const tickerList = positions.map(pos => pos.ticker.trim()).filter(ticker => ticker !== '');
 
-    // If any agent needs a local Ollama model that isn't downloaded/running yet,
-    // prompt to set it up before starting the run instead of failing mid-run.
-    const ollamaReady = await ensureOllamaReady(agentModels);
-    if (!ollamaReady) return;
+    // Make sure the backend is reachable, and if any agent needs a local Ollama
+    // model that isn't downloaded/running yet, prompt to set it up first.
+    const runReady = await ensureRunReady(agentModels);
+    if (!runReady) return;
 
     // Check if we're in backtest mode
     if (runMode === 'backtest') {
@@ -455,7 +455,7 @@ export function PortfolioStartNode({
           </div>
         </CardContent>
       </NodeShell>
-      {ollamaSetupDialog}
+      {runPreflightDialog}
     </TooltipProvider>
   );
 }
