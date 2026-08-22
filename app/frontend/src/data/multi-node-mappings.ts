@@ -77,5 +77,52 @@ export function getMultiNodeDefinition(name: string): MultiNodeDefinition | null
 }
 
 export function isMultiNodeComponent(componentName: string): boolean {
-  return componentName in multiNodeDefinition;
-} 
+  return componentName === RANDOM_SWARM_NAME || componentName in multiNodeDefinition;
+}
+
+export const RANDOM_SWARM_NAME = "Random Swarm";
+
+const RANDOM_SWARM_MIN_ANALYSTS = 2;
+const ANALYST_VERTICAL_SPACING = 200;
+const ANALYST_OFFSET_X = 400;
+const PORTFOLIO_MANAGER_OFFSET_X = 800;
+
+function shuffle<T>(items: T[]): T[] {
+  const result = [...items];
+  for (let i = result.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [result[i], result[j]] = [result[j], result[i]];
+  }
+  return result;
+}
+
+/**
+ * Builds a "Random Swarm" definition: a Stock Input feeding a random subset
+ * of the given analysts (at least 2, at most all of them) into a Portfolio
+ * Manager. Regenerated fresh - and reshuffled - every time it's added.
+ */
+export function generateRandomSwarmDefinition(analystDisplayNames: string[]): MultiNodeDefinition {
+  const maxCount = analystDisplayNames.length;
+  const minCount = Math.min(RANDOM_SWARM_MIN_ANALYSTS, maxCount);
+  const count = minCount + Math.floor(Math.random() * (maxCount - minCount + 1));
+  const selected = shuffle(analystDisplayNames).slice(0, count);
+
+  const analystNodes = selected.map((displayName, index) => ({
+    componentName: displayName,
+    offsetX: ANALYST_OFFSET_X,
+    offsetY: (index - (selected.length - 1) / 2) * ANALYST_VERTICAL_SPACING,
+  }));
+
+  return {
+    name: RANDOM_SWARM_NAME,
+    nodes: [
+      { componentName: "Stock Input", offsetX: 0, offsetY: 0 },
+      ...analystNodes,
+      { componentName: "Portfolio Manager", offsetX: PORTFOLIO_MANAGER_OFFSET_X, offsetY: 0 },
+    ],
+    edges: [
+      ...selected.map(displayName => ({ source: "Stock Input", target: displayName })),
+      ...selected.map(displayName => ({ source: displayName, target: "Portfolio Manager" })),
+    ],
+  };
+}
