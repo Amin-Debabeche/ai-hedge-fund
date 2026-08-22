@@ -8,9 +8,11 @@ import {
   LucideIcon,
   Network,
   Play,
+  Shuffle,
   Zap
 } from 'lucide-react';
 import { Agent, getAgents } from './agents';
+import { RANDOM_SWARM_NAME } from './multi-node-mappings';
 
 // Define component items by group
 export interface ComponentItem {
@@ -58,6 +60,7 @@ export const getComponentGroups = async (): Promise<ComponentGroup[]> => {
         { name: "Data Wizards", icon: Calculator },
         { name: "Market Mavericks", icon: Zap },
         { name: "Value Investors", icon: BadgeDollarSign },
+        { name: RANDOM_SWARM_NAME, icon: Shuffle },
       ]
     },
     {
