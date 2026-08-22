@@ -1,4 +1,5 @@
-import { getMultiNodeDefinition, isMultiNodeComponent } from '@/data/multi-node-mappings';
+import { getAgents } from '@/data/agents';
+import { generateRandomSwarmDefinition, getMultiNodeDefinition, isMultiNodeComponent, RANDOM_SWARM_NAME } from '@/data/multi-node-mappings';
 import { getNodeTypeDefinition } from '@/data/node-mappings';
 import { flowConnectionManager } from '@/hooks/use-flow-connection';
 import { clearAllNodeStates, getAllNodeStates, setNodeInternalState, setCurrentFlowId as setNodeStateFlowId } from '@/hooks/use-node-state';
@@ -234,7 +235,9 @@ export function FlowProvider({ children }: FlowProviderProps) {
   // Add a multi node (group of nodes with edges) to the flow
   const addMultipleNodesToFlow = useCallback(async (name: string) => {
     try {
-      const multiNodeDefinition = getMultiNodeDefinition(name);
+      const multiNodeDefinition = name === RANDOM_SWARM_NAME
+        ? generateRandomSwarmDefinition((await getAgents()).map((agent) => agent.display_name))
+        : getMultiNodeDefinition(name);
       if (!multiNodeDefinition) {
         console.warn(`No multi node definition found for: ${name}`);
         return;
